@@ -63,6 +63,7 @@ typings/
 .next
 
 .twilio-functions
+.DS_STORE
 
 # Flex related ignore
 appConfig.js

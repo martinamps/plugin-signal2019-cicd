@@ -55,7 +55,7 @@ class SignalView extends React.Component {
     const attrs = this.props.workerClient.attributes;
     return (
       <SignalViewComponentStyles>
-        <h1>Signal CICD & Devops</h1>
+        <h1>Signal CICD & Devops SHDFSDF</h1>
           <Table>
             <TableHead>
               <TableRow>

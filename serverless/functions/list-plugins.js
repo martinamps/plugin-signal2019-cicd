@@ -1,12 +1,13 @@
 const TokenValidator = require('twilio-flex-token-validator').validator;
 
 exports.handler = (context, event, callback) => {
+  console.log(event);
   TokenValidator(event['X-Flex-JWE'], context.ACCOUNT_SID, context.AUTH_TOKEN)
     .then(tokenResult => {
       console.log("validated token", tokenResult);
       let plugins = [{
         "name":"Flex Signal Dev Ops Plugin",
-        "src":"https://signal-2019-flex-cicd.s3-us-west-1.amazonaws.com/dist/master/plugin-signal-demo-test.js"
+        "src":"https://signal-2019-flex-cicd.s3-us-west-1.amazonaws.com/dist/master/plugin-signal2019-cicd.js"
       }]
 
       context.getTwilioClient()

@@ -12,7 +12,7 @@ executors:
 
 jobs:
   build:
-    working_directory: ~/plugin-signal-demo-test
+    working_directory: ~/plugin-signal2019-cicd
     executor: node
     steps:
       - checkout
@@ -42,22 +42,26 @@ jobs:
       - attach_workspace: {at: .}
       - aws-s3/sync:
           from: build
-          to: s3://signal-2019-flex-cicd/dist/${CIRCLE_BRANCH}/${CIRCLE_TAG}
+          to: s3://signal-2019-flex-cicd/dist/${CIRCLE_BRANCH}/
           arguments: --acl public-read
           overwrite: true 
+      - run:
+          name: Rollbar notification
+          command: |
+            curl https://api.rollbar.com/api/1/deploy/ \
+               -F access_token=${ROLLBAR_TOKEN} \
+               -F environment=production \
+               -F revision=${CIRCLE_SHA1} \
+               -F rollbar_username=${CIRCLE_USERNAME} \
+               -F local_username=${CIRCLE_USERNAME} \
+               -F comment="${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH} by ${CIRCLE_USERNAME}"
 
 workflows:
   version: 2.1
-  build:
-    jobs:
-      - build
-
   build-deploy:
     jobs:
       - build
       - deploy:
           requires:
             - build
-          filters:
-            tags:
-              only: /v.*/
+
