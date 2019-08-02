@@ -1,9 +1,8 @@
 import React from 'react';
-import { VERSION } from '@twilio/flex-ui';
-import { FlexPlugin } from 'flex-plugin';
+import Rollbar from 'rollbar';
 
-import CustomTaskListContainer from './components/CustomTaskList/CustomTaskList.Container';
-import reducers, { namespace } from './states';
+import { FlexPlugin } from 'flex-plugin';
+import SignalView from './components/SignalView/SignalView';
 
 const PLUGIN_NAME = 'SignalDemoTestPlugin';
 
@@ -20,27 +19,59 @@ export default class SignalDemoTestPlugin extends FlexPlugin {
    * @param manager { import('@twilio/flex-ui').Manager }
    */
   init(flex, manager) {
-    this.registerReducers(manager);
+    this.registerLogger();
 
-    const options = { sortOrder: -1 };
-    flex.AgentDesktopView
-      .Panel1
-      .Content
-      .add(<CustomTaskListContainer key="demo-component" />, options);
+    flex.CRMContainer.Content.replace(
+      <SignalView key='signalView'
+        manager={manager}
+        workerClient={manager.workerClient}
+        rollbarClient={this.Rollbar}
+      />
+    );
   }
 
-  /**
-   * Registers the plugin reducers
-   *
-   * @param manager { Flex.Manager }
-   */
-  registerReducers(manager) {
-    if (!manager.store.addReducer) {
-      // eslint: disable-next-line
-      console.error(`You need FlexUI > 1.9.0 to use built-in redux; you are currently on ${VERSION}`);
-      return;
-    }
+  registerLogger() {
+    this.Rollbar = new Rollbar({
+      reportLevel: 'debug',
+      accessToken: '8e2ab7acc8644bc38bcd7775306a1a33',
+      captureUncaught: true,
+      captureUnhandledRejections: true,
+      payload: {
+          environment: 'production'
+      }
+    });
 
-    manager.store.addReducer(namespace, reducers);
+    const myLogManager = new window.Twilio.Flex.Log.LogManager({
+        spies: [{
+                type: window.Twilio.Flex.Log.PredefinedSpies.ClassProxy,
+                target: window.console,
+                targetAlias: 'Proxied window.console',
+                methods: ['log', 'debug', 'info', 'warn', 'error'],
+                onStart: (proxy) => {
+                    window.console = proxy;
+                }
+        }],
+        storage: () => null,
+        formatter: () => (entries) => entries[0],
+        transport: () => ({
+            flush: (entry) => {
+                const collectedData = entry && entry.subject && entry.args;
+                if (!collectedData) {
+                    return;
+                }
+
+                const args = entry.args.join();
+                const isRollbarMethod = typeof this.Rollbar[entry.subject] === 'function';
+
+                if (isRollbarMethod) {
+                    this.Rollbar[entry.subject](args);
+                } else {
+                    this.Rollbar.log(args);
+                }
+            }
+        })
+    });
+
+    myLogManager.prepare().then(myLogManager.start);
   }
 }
