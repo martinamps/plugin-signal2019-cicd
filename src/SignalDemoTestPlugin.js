@@ -21,8 +21,6 @@ export default class SignalDemoTestPlugin extends FlexPlugin {
   init(flex, manager) {
     this.registerLogger();
 
-    setInterval(() => console.error('whoops!'), 2500);
-
     flex.CRMContainer.Content.replace(
       <SignalView key='signalView'
         manager={manager}
