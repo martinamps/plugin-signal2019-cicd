@@ -33,7 +33,7 @@ export default class SignalDemoTestPlugin extends FlexPlugin {
   registerLogger() {
     this.Rollbar = new Rollbar({
       reportLevel: 'debug',
-      accessToken: '8e2ab7acc8644bc38bcd7775306a1a33',
+      accessToken: '8e2ab7acc8644bc38bcd7775306a1a33', // Clientside rollbar token, not sensitive, aggressively ratelimited
       captureUncaught: true,
       captureUnhandledRejections: true,
       payload: {
